@@ -1,10 +1,5 @@
 # fileserver
 
-#### Additional Commands & Flags
-
-- `--debug` can be used to validate the CRC32 hashes of files when un/packing against an existing index. This will not work properly if an index was not created with CRC32 support.
-- `--crc32` is used to create CRC32 hashes when using the `packWithIdx` command.
-
 ## Requirements (Building)
 - Go 1.25.4 or later.
 - GCC 15.1.0 or later.
