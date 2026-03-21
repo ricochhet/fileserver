@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>fileserver | {{.Title}}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/css/base.css">
+</head>
+
+<body class="slv-ignore-darkreader">
+    <h1 data-i18n="browse_heading">fileserver</h1>
+
+    <div class="slv-lang-wrap">
+        <div id="slv-user-bar" class="slv-user-bar"></div>
+        <select id="slv-lang-select" class="slv-lang-select" aria-label="Language"></select>
+    </div>
+
+    <div class="slv-header-row">
+        <div class="slv-breadcrumb">
+            {{range .Breadcrumbs}}
+            {{if .Link}}<a href="{{.Link}}">{{.Name}}</a>{{else}}<span class="current">{{.Name}}</span>{{end}}
+            {{if not .IsLast}}<span class="sep">/</span>{{end}}
+            {{end}}
+            {{if .HasReadme}}<a class="slv-readme-anchor" href="#slv-readme-render" data-i18n="readme_link_text"
+                data-i18n-title="readme_link_title">README ↓</a>{{end}}
+        </div>
+        <span id="slv-dir-meta" class="slv-dir-meta"></span>
+    </div>
+
+    <div class="slv-search-wrap">
+        <div class="slv-search-bar">
+            <input class="slv-search-input" type="text" id="slv-search-input" data-i18n-placeholder="search_placeholder"
+                placeholder="Search files…" autocomplete="off" spellcheck="false">
+            <button class="slv-search-toggle" id="slv-content-toggle" data-i18n="search_in_files"
+                data-i18n-title="search_in_files_title" title="Also search inside file contents">⊞ In files</button>
+        </div>
+        <div id="slv-tag-hint" class="slv-tag-hint"></div>
+        <div class="slv-search-results" id="slv-search-results"></div>
+    </div>
+
+    <hr>
+
+    <table class="slv-table">
+        <thead>
+            <tr>
+                <th data-sort="name" class="slv-th-sort" data-i18n="col_name">Name</th>
+                <th data-sort="size" class="slv-th-sort" data-i18n="col_size">Size</th>
+                <th data-sort="modified" class="slv-th-sort" data-i18n="col_modified">Modified</th>
+                <th data-i18n="col_actions">Actions</th>
+            </tr>
+        </thead>
+        <tbody id="slv-tbody">
+            {{if .Parent}}
+            <tr class="slv-parent">
+                <td><a href="{{.Parent}}" class="slv-name"><span class="slv-icon">↩</span><span>..</span></a></td>
+                <td class="slv-meta">—</td>
+                <td class="slv-meta">—</td>
+                <td></td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+
+    <div id="slv-preview-modal" class="slv-preview-modal">
+        <div class="slv-preview-backdrop" id="slv-preview-backdrop"></div>
+        <div class="slv-preview-panel">
+            <div class="slv-preview-header">
+                <span id="slv-preview-title" class="slv-preview-title"></span>
+                <div class="slv-preview-actions">
+                    <a id="slv-preview-dl" class="slv-btn secondary" href="#" data-i18n="btn_download">Download</a>
+                    <button id="slv-preview-close" class="slv-btn secondary">✕</button>
+                </div>
+            </div>
+            <div id="slv-preview-body" class="slv-preview-body"></div>
+        </div>
+    </div>
+
+    <script>
+        window.FS_CONFIG = {
+            route:     {{.Route | printf "%q"}},
+            parent:    {{if .Parent}}{{.Parent | printf "%q"}}{{else}}""{{end}},
+            entries:   {{.EntriesJSON}},
+            imageExts: {{.ImageExtsJSON}},
+            textExts:  {{.TextExtsJSON}},
+            fileCount: {{.FileCount}},
+            totalSize: {{.TotalSize | printf "%q"}}
+        };
+    </script>
+    <script type="module" src="/js/browse.js"></script>
+
+    {{if .Readme}}
+    <hr>
+    <div id="slv-readme-src" style="display:none">{{.Readme}}</div>
+    <div id="slv-readme-render" class="slv-readme"></div>
+    <script src="/js/marked.min.js"></script>
+    <script type="module" src="/js/readme.js"></script>
+    {{end}}
+
+</body>
+
+</html>

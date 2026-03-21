@@ -1,0 +1,101 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run Format",
+            "type": "shell",
+            "command": "mingw32-make",
+            "args": [
+                "fmt",
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Run Lint",
+            "type": "shell",
+            "command": "mingw32-make",
+            "args": [
+                "lint",
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Run Tidy",
+            "type": "shell",
+            "command": "mingw32-make",
+            "args": [
+                "tidy",
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Run Update",
+            "type": "shell",
+            "command": "mingw32-make",
+            "args": [
+                "update",
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Build fileserver (Windows)",
+            "type": "shell",
+            "command": "mingw32-make",
+            "args": [
+                "fileserver-windows",
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Build pm (Windows)",
+            "type": "shell",
+            "command": "mingw32-make",
+            "args": [
+                "pm-windows",
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+    ]
+}

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>fileserver | login.</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/css/base.css">
+    <style>
+
+    </style>
+</head>
+
+<body class="slv-ignore-darkreader">
+    <div class="slv-lang-wrap">
+        <select id="slv-lang-select" class="slv-lang-select" aria-label="Language"></select>
+    </div>
+
+    <div class="slv-login-wrap">
+        <div class="slv-login-box">
+            <h1 data-i18n="login_heading">fileserver</h1>
+            <p class="slv-login-subtitle" data-i18n="login_subtitle">sign in to continue.</p>
+
+            {{if .Error}}
+            <div class="slv-login-error">{{.Error}}</div>
+            {{end}}
+
+            <form method="POST" action="/auth/login">
+                <input type="hidden" name="next" value="{{.Next}}">
+
+                <div class="slv-login-field">
+                    <label for="slv-username" data-i18n="login_username_label">username</label>
+                    <input type="text" id="slv-username" name="username" autocomplete="username" autocapitalize="none"
+                        spellcheck="false" autofocus>
+                </div>
+
+                <div class="slv-login-field">
+                    <label for="slv-password" data-i18n="login_password_label">password</label>
+                    <input type="password" id="slv-password" name="password" autocomplete="current-password">
+                </div>
+
+                <button type="submit" class="slv-login-submit" data-i18n="login_submit">sign in →</button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="/js/lang.js"></script>
+</body>
+
+</html>

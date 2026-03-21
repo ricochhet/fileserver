@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>fileserver | chat.</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/css/base.css">
+</head>
+
+<body class="slv-ignore-darkreader slv-chat-page">
+
+    <div class="slv-sidebar slv-chat-sidebar">
+
+        <p class="slv-sidebar-brand">
+            <a href="/" class="slv-chat-home-link">fileserver</a>
+            <span class="slv-chat-brand-sep">/</span>
+            <span data-i18n="chat_brand">chat</span>
+        </p>
+
+        <div class="slv-divider"></div>
+
+        <div class="slv-chat-section-label" data-i18n="chat_channels_label">channels</div>
+
+        <div id="slv-chat-channels" class="slv-chat-channel-list">
+        </div>
+
+        <div class="slv-chat-sidebar-footer">
+            <div id="slv-chat-identity" class="slv-chat-identity-block">
+            </div>
+            <div class="slv-chat-sidebar-actions">
+                <button id="slv-join-btn" class="slv-btn slv-chat-join-btn" data-i18n="chat_join_btn">+ join</button>
+                <a href="/auth/logout" class="slv-btn secondary" data-i18n="chat_logout_btn">logout</a>
+            </div>
+            <div class="slv-chat-lang-wrap">
+                <select id="slv-lang-select" class="slv-lang-select" aria-label="Language"></select>
+            </div>
+        </div>
+    </div>
+
+    <div class="slv-chat-main">
+
+        <div id="slv-chat-empty" class="slv-chat-empty-state">
+            <div class="slv-chat-empty-inner">
+                <p data-i18n="chat_empty_heading">no channel selected.</p>
+                <p class="slv-chat-empty-sub" data-i18n="chat_empty_sub">join a channel with a code to start chatting.
+                </p>
+                <button id="slv-join-empty-btn" class="slv-button" data-i18n="chat_join_btn">+ join channel</button>
+            </div>
+        </div>
+
+        <div id="slv-chat-view" class="slv-chat-view slv-hidden">
+
+            <div class="slv-chat-header">
+                <div class="slv-chat-header-left">
+                    <span class="slv-chat-hash">#</span>
+                    <span id="slv-chat-channel-name" class="slv-chat-channel-title"></span>
+                    <span id="slv-chat-channel-code" class="slv-chat-channel-code-badge"></span>
+                </div>
+                <div class="slv-chat-header-right">
+                    <button id="slv-leave-btn" class="slv-btn secondary" data-i18n="chat_leave_btn">leave</button>
+                </div>
+            </div>
+
+            <div id="slv-chat-log" class="slv-chat-log" aria-live="polite" aria-label="Messages"></div>
+
+            <div class="slv-chat-compose">
+                <input id="slv-chat-input" type="text" class="slv-chat-compose-input"
+                    data-i18n-placeholder="chat_input_placeholder" placeholder="send a message…" autocomplete="off"
+                    spellcheck="true" maxlength="2000">
+                <button id="slv-chat-send" class="slv-btn slv-chat-send-btn" data-i18n="chat_send_btn">send</button>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="slv-join-modal" class="slv-chat-modal slv-hidden" role="dialog" aria-modal="true">
+        <div class="slv-chat-modal-backdrop" id="slv-join-backdrop"></div>
+        <div class="slv-chat-modal-box">
+            <h3 data-i18n="chat_join_modal_title">join a channel</h3>
+
+            <div class="slv-login-field">
+                <label for="slv-join-code" data-i18n="chat_join_code_label">channel code</label>
+                <input type="text" id="slv-join-code" data-i18n-placeholder="chat_join_code_placeholder"
+                    placeholder="e.g. project-alpha" autocomplete="off" spellcheck="false">
+            </div>
+
+            <div class="slv-login-field">
+                <label for="slv-join-name" data-i18n="chat_join_name_label">channel name
+                    <span class="slv-chat-optional" data-i18n="chat_optional">(optional)</span>
+                </label>
+                <input type="text" id="slv-join-name" data-i18n-placeholder="chat_join_name_placeholder"
+                    placeholder="e.g. Project Alpha" autocomplete="off">
+            </div>
+
+            <div id="slv-join-error" class="slv-login-error slv-hidden"></div>
+
+            <div class="slv-chat-modal-actions">
+                <button id="slv-join-submit" class="slv-button slv-chat-modal-submit" data-i18n="chat_join_submit">join
+                    →</button>
+                <button id="slv-join-cancel" class="slv-btn secondary slv-chat-modal-cancel"
+                    data-i18n="chat_join_cancel">cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.FS_LOCALES = { "en": "English" };
+        window.FS_CHAT_ROUTE = {{.ChatRoute | printf "%q"}};
+    </script>
+    <script type="module" src="/js/chat/chat.js"></script>
+
+</body>
+
+</html>

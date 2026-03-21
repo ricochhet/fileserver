@@ -1,0 +1,85 @@
+{
+    "servers": [
+        {
+            "port": 8080,
+            "features": {
+                "chatRoute": "/chat",
+                "disableChat": false,
+                "disableBrowse": false
+            },
+            "formAuth": {
+                "users": [
+                    {
+                        "username": "username",
+                        "password": "password",
+                        "displayName": ""
+                    }
+                ],
+                "secret": "",
+                "publicPrefixes": [
+                    "/css/",
+                    "/js/"
+                ]
+            },
+            "fileEntries": [
+                {
+                    "route": "/patcher",
+                    "path": "London2038Patcher/B057EBE3/",
+                    "info": {
+                        "statusCode": 0,
+                        "headers": {}
+                    },
+                    "browse": "/browse"
+                }
+            ],
+            "contentEntries": [
+                {
+                    "route": "/",
+                    "name": "index.html",
+                    "base64": "asset:index.html",
+                    "info": {
+                        "statusCode": 0,
+                        "headers": {}
+                    }
+                },
+                {
+                    "route": "/404.html",
+                    "name": "404.html",
+                    "base64": "asset:404.html",
+                    "info": {
+                        "statusCode": 0,
+                        "headers": {}
+                    }
+                },
+                {
+                    "route": "/js",
+                    "dir": "asset:js",
+                    "exclude": [],
+                    "info": {
+                        "statusCode": 0,
+                        "headers": {}
+                    }
+                },
+                {
+                    "route": "/css",
+                    "dir": "asset:css",
+                    "exclude": [],
+                    "info": {
+                        "statusCode": 0,
+                        "headers": {}
+                    }
+                }
+            ],
+            "chatChannels": [
+                {
+                    "code": "general",
+                    "name": "General"
+                },
+                {
+                    "code": "patcher",
+                    "name": "Patcher Support"
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,182 @@
+version: "2"
+linters:
+  disable:
+    - unused
+    - cyclop
+    - err113
+    - exhaustruct
+    - funlen
+    - gochecknoglobals
+    - gocognit
+    - gocyclo
+    - godox
+    - gosec
+    - mnd
+    - nonamedreturns
+    - varnamelen
+  enable:
+    - arangolint
+    - asasalint
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - canonicalheader
+    - containedctx
+    - contextcheck
+    - copyloopvar
+    - decorder
+    - depguard
+    - dogsled
+    - dupl
+    - dupword
+    - durationcheck
+    - errchkjson
+    - errname
+    - exptostd
+    - errorlint
+    - exhaustive
+    - embeddedstructfieldcheck
+    - funcorder
+    - fatcontext
+    - forcetypeassert
+    - ginkgolinter
+    - gocheckcompilerdirectives
+    - gochecknoinits
+    - gochecksumtype
+    - goconst
+    - gocritic
+    - godot
+    - goheader
+    # - gomoddirectives
+    # - gomodguard
+    - goprintffuncname
+    - gosmopolitan
+    - grouper
+    - importas
+    - inamedparam
+    - interfacebloat
+    - intrange
+    # - ireturn
+    - iface
+    - lll
+    - loggercheck
+    - maintidx
+    - makezero
+    - mirror
+    - misspell
+    - musttag
+    - nakedret
+    - nestif
+    - nilerr
+    - nilnil
+    - noctx
+    - nolintlint
+    - nosprintfhostport
+    - nilnesserr
+    - paralleltest
+    - perfsprint
+    - prealloc
+    - predeclared
+    - promlinter
+    - protogetter
+    - reassign
+    - revive
+    - recvcheck
+    - rowserrcheck
+    - sloglint
+    - spancheck
+    - sqlclosecheck
+    - staticcheck
+    - tagalign
+    - tagliatelle
+    - testableexamples
+    - testifylint
+    - testpackage
+    - thelper
+    - tparallel
+    - unconvert
+    - unparam
+    - usestdlibvars
+    - wastedassign
+    - whitespace
+    - wsl_v5
+    - zerologlint
+  settings:
+    depguard:
+      rules:
+        prevent_unmaintained_packages:
+          allow:
+            - $gostd
+            - golang.org/x/term
+            - golang.org/x/sys/windows
+            - golang.org/x/sys/windows/registry
+            - github.com/go-chi/chi/v5
+            - github.com/go-chi/chi/v5/middleware
+            - github.com/go-chi/httprate
+            - github.com/go-chi/cors
+            - github.com/mattn/go-colorable
+            - github.com/tidwall/jsonc
+            - go.yaml.in/yaml/v4
+            - github.com/joho/godotenv
+            - github.com/creack/pty
+            - golang.org/x/sys/unix
+            - github.com/goodhosts/hostsfile
+            - github.com/sasha-s/go-deadlock
+            - modernc.org/sqlite
+            - github.com/ricochhet/fileserver
+    funlen:
+      lines: 100
+      statements: 50
+    gocyclo:
+      min-complexity: 15
+    lll:
+      line-length: 140
+    misspell:
+      locale: US
+      ignore-rules:
+        - spectre
+    mnd:
+      ignored-numbers:
+        - "0o200"
+        - "0o600"
+        - "0o644"
+        - "0o666"
+        - "0o700"
+        - "0o755"
+    nolintlint:
+      require-explanation: true
+      require-specific: false
+      allow-unused: false
+    revive:
+      confidence: 0
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - extras/mkcert
+      - submodules$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+    - golines
+    - swaggo
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/golang-templates/seed
+  exclusions:
+    generated: lax
+    paths:
+      - thirdparty/
+      - third_party$
+      - builtin$
+      - examples$
