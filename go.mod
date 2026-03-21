@@ -15,6 +15,8 @@ require (
 	github.com/sasha-s/go-deadlock v0.3.9
 	github.com/tidwall/jsonc v0.3.3
 	go.yaml.in/yaml/v4 v4.0.0-rc.4
+	golang.org/x/term v0.41.0
+	modernc.org/sqlite v1.47.0
 )
 
 require (
@@ -29,9 +31,7 @@ require (
 	github.com/petermattis/goid v0.0.0-20250813065127-a731cc31b4fe // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/zeebo/xxh3 v1.0.2 // indirect
-	golang.org/x/term v0.41.0 // indirect
 	modernc.org/libc v1.70.0 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
-	modernc.org/sqlite v1.47.0 // indirect
 )
