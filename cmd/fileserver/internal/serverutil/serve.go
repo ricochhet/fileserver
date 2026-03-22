@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/ricochhet/fileserver/pkg/logutil"
@@ -17,7 +16,6 @@ import (
 func (h *Context) ListenAndServe(
 	baseCtx context.Context,
 	addr string,
-	wg *sync.WaitGroup,
 ) *http.Server {
 	srv := &http.Server{
 		Addr:              addr,
@@ -30,18 +28,6 @@ func (h *Context) ListenAndServe(
 
 	if baseCtx != nil {
 		srv.BaseContext = func(net.Listener) context.Context { return baseCtx }
-	}
-
-	if wg != nil {
-		srv.ConnState = func(_ net.Conn, state http.ConnState) {
-			switch state {
-			case http.StateNew:
-				wg.Add(1)
-			case http.StateClosed, http.StateHijacked:
-				wg.Done()
-			case http.StateActive, http.StateIdle:
-			}
-		}
 	}
 
 	logutil.Infof(logutil.Get(), "Server listening on %s\n", addr)

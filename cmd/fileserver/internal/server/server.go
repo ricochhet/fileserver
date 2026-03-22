@@ -10,7 +10,6 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	"sync"
 	"syscall"
 	"text/template"
 	"time"
@@ -51,7 +50,6 @@ type Context struct {
 	chatStore  *chat.Store
 	db         *db.DB
 	baseCancel context.CancelFunc
-	connWg     sync.WaitGroup
 }
 
 // NewServer returns a Context with the database and chat store initialized.
@@ -265,28 +263,29 @@ func wrapBasicAuth(auth configutil.BasicAuth, h http.Handler) http.Handler {
 	return withBasicAuth(auth.Username, auth.Password)(h)
 }
 
-// shutdown waits for interrupt or SIGTERM then gracefully drains all servers and closes the DB.
+// shutdown waits for interrupt or SIGTERM, cancels in-flight requests, then
+// gracefully drains all servers (up to 10 s) before closing the DB.
 func (c *Context) shutdown() {
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 	<-stop
 
+	// Cancel the base context first so SSE streams and other long-lived
+	// handlers return promptly rather than waiting out the shutdown timeout.
 	if c.baseCancel != nil {
 		c.baseCancel()
 	}
 
-	// Wait for all connections to close naturally after the context is canceled.
-	// ConnState callbacks (set in ListenAndServe) decrement connWg when each
-	// connection reaches StateClosed, so this returns as soon as they're all gone.
-	c.connWg.Wait()
+	shutCtx, shutCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer shutCancel()
 
 	for _, srv := range c.servers {
-		if err := srv.Close(); err != nil {
-			logutil.Errorf(logutil.Get(), "Error closing server: %v\n", err)
+		if err := srv.Shutdown(shutCtx); err != nil {
+			logutil.Errorf(logutil.Get(), "Error shutting down server: %v\n", err)
 		}
 	}
 
-	// Close the DB after servers close so in-flight SaveMessage calls can complete.
+	// Close the DB after servers drain so any in-flight SaveMessage calls complete.
 	if c.db != nil {
 		if err := c.db.Close(); err != nil {
 			logutil.Errorf(logutil.Get(), "Error closing database: %v\n", err)
@@ -392,7 +391,7 @@ func (c *Context) startServer(
 		return errutil.New("c.serveContentHandler", err)
 	}
 
-	srv := ctx.ListenAndServe(baseCtx, fmt.Sprintf(":%d", cfg.Port), &c.connWg)
+	srv := ctx.ListenAndServe(baseCtx, fmt.Sprintf(":%d", cfg.Port))
 	c.servers = append(c.servers, srv)
 
 	return nil
