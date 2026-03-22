@@ -60,6 +60,7 @@ export function appendMessage(msg) {
 	els.log.appendChild(makeMessageEl(msg, grouped));
 }
 
+/** Scrolls the message log to the bottom, instantly or smoothly. */
 export function scrollToBottom(instant = false) {
 	els.log.scrollTo({
 		top: els.log.scrollHeight,
@@ -67,12 +68,14 @@ export function scrollToBottom(instant = false) {
 	});
 }
 
+/** Returns true if the log is scrolled close enough to the bottom to auto-scroll. */
 export function isNearBottom() {
 	return (
 		els.log.scrollHeight - els.log.scrollTop - els.log.clientHeight < 120
 	);
 }
 
+/** Creates a dated divider element for the message log. */
 function makeDivider(label) {
 	const el = document.createElement("div");
 	el.className = "slv-chat-divider";
@@ -81,6 +84,7 @@ function makeDivider(label) {
 	return el;
 }
 
+/** Builds a message element, optionally grouped to omit the sender header. */
 function makeMessageEl(msg, grouped) {
 	const isSelf = state.me && msg.username === state.me.username;
 
@@ -116,6 +120,7 @@ function makeMessageEl(msg, grouped) {
 	return wrap;
 }
 
+/** Formats an ISO timestamp as a human-readable date label relative to today. */
 function formatDate(iso) {
 	const d = new Date(iso);
 	const today = new Date();
@@ -133,6 +138,7 @@ function formatDate(iso) {
 	});
 }
 
+/** Formats an ISO timestamp as a short HH:MM time string. */
 function formatTime(iso) {
 	return new Date(iso).toLocaleTimeString(undefined, {
 		hour: "2-digit",

@@ -6,17 +6,27 @@ import (
 	"strings"
 
 	"github.com/ricochhet/fileserver/cmd/fileserver/internal/serverutil"
+	"github.com/ricochhet/fileserver/pkg/errutil"
 	"github.com/ricochhet/fileserver/pkg/httputil"
 )
 
+type joinBody struct {
+	Code string `json:"code"`
+	Name string `json:"name"`
+}
+
+type leaveBody struct {
+	Code string `json:"code"`
+}
+
 // availableChannelsHandler returns all channels in the store so the client can
 // present a pick-list in the join modal. Channels the user is already subscribed
-// to are included; the frontend filters them out.
+// to are included.
 func availableChannelsHandler(store *Store, resolve UserResolver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		username, _ := resolve(r)
+		username, _, _ := resolve(r)
 		if username == "" {
-			httputil.Error(w, http.StatusUnauthorized, "unauthorized")
+			errutil.HTTPUnauthorized(w)
 			return
 		}
 
@@ -32,7 +42,7 @@ func availableChannelsHandler(store *Store, resolve UserResolver) http.HandlerFu
 // channelsHandler returns the channels the authenticated user is subscribed to.
 func channelsHandler(store *Store, resolve UserResolver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		username, _ := resolve(r)
+		username, _, _ := resolve(r)
 
 		subs := store.Subscriptions(username)
 		if subs == nil {
@@ -46,24 +56,21 @@ func channelsHandler(store *Store, resolve UserResolver) http.HandlerFunc {
 // joinHandler subscribes the authenticated user to a channel.
 func joinHandler(store *Store, resolve UserResolver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		username, _ := resolve(r)
+		username, _, _ := resolve(r)
 		if username == "" {
-			httputil.Error(w, http.StatusUnauthorized, "unauthorized")
+			errutil.HTTPUnauthorized(w)
 			return
 		}
 
-		var body struct {
-			Code string `json:"code"`
-			Name string `json:"name"`
-		}
+		body := joinBody{}
 		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-			httputil.Error(w, http.StatusBadRequest, "invalid JSON body")
+			errutil.HTTPBadRequestf(w, "invalid JSON body")
 			return
 		}
 
 		body.Code = strings.TrimSpace(body.Code)
 		if body.Code == "" {
-			httputil.Error(w, http.StatusBadRequest, `"code" is required`)
+			errutil.HTTPBadRequestf(w, `"code" is required`)
 			return
 		}
 
@@ -75,23 +82,21 @@ func joinHandler(store *Store, resolve UserResolver) http.HandlerFunc {
 // leaveHandler unsubscribes the authenticated user from a channel.
 func leaveHandler(store *Store, resolve UserResolver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		username, _ := resolve(r)
+		username, _, _ := resolve(r)
 		if username == "" {
-			httputil.Error(w, http.StatusUnauthorized, "unauthorized")
+			errutil.HTTPUnauthorized(w)
 			return
 		}
 
-		var body struct {
-			Code string `json:"code"`
-		}
+		body := leaveBody{}
 		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-			httputil.Error(w, http.StatusBadRequest, "invalid JSON body")
+			errutil.HTTPBadRequestf(w, "invalid JSON body")
 			return
 		}
 
 		body.Code = strings.TrimSpace(body.Code)
 		if body.Code == "" {
-			httputil.Error(w, http.StatusBadRequest, `"code" is required`)
+			errutil.HTTPBadRequestf(w, `"code" is required`)
 			return
 		}
 

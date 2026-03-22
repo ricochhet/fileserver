@@ -71,16 +71,6 @@ func DenyFrame(w http.ResponseWriter) {
 	w.Header().Set(string(HeaderXFrameOptions), "DENY")
 }
 
-// Error writes a plain-text HTTP error response with the given status code and message.
-func Error(w http.ResponseWriter, status int, msg string) {
-	http.Error(w, msg, status)
-}
-
-// Errorf writes a formatted plain-text HTTP error response with the given status code.
-func Errorf(w http.ResponseWriter, status int, format string, args ...any) {
-	http.Error(w, fmt.Sprintf(format, args...), status)
-}
-
 // NoContent writes a 204 No Content response.
 func NoContent(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusNoContent)

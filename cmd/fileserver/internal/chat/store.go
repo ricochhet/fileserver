@@ -16,7 +16,6 @@ const maxMessagesPerChannel = 200
 
 var ErrNotSubscribed = errors.New("chat: not subscribed to channel")
 
-// Message is a single chat message.
 type Message struct {
 	ID          string    `json:"id"`
 	ChannelCode string    `json:"channelCode"`
@@ -27,13 +26,11 @@ type Message struct {
 	Timestamp   time.Time `json:"timestamp"`
 }
 
-// Channel is a chat channel identified by its code.
 type Channel struct {
 	Code string `json:"code"`
 	Name string `json:"name"`
 }
 
-// Store is a thread-safe in-memory chat store optionally backed by a SQLite database.
 type Store struct {
 	mu       sync.RWMutex
 	channels map[string]*Channel
@@ -242,6 +239,7 @@ func (s *Store) nextID() string {
 	return strconv.FormatUint(s.seq.Add(1), 10)
 }
 
+// toDBMessage converts a Message to a chatdb.Message.
 func toDBMessage(m *Message) *chatdb.Message {
 	return &chatdb.Message{
 		ID:          m.ID,
@@ -254,6 +252,7 @@ func toDBMessage(m *Message) *chatdb.Message {
 	}
 }
 
+// fromDBMessage converts a chatdb.Message to a Message.
 func fromDBMessage(m *chatdb.Message) *Message {
 	return &Message{
 		ID:          m.ID,
@@ -272,6 +271,7 @@ type broker struct {
 	clients map[string][]chan *Message
 }
 
+// newBroker returns a new broker.
 func newBroker() *broker {
 	return &broker{clients: make(map[string][]chan *Message)}
 }

@@ -2,6 +2,7 @@ import { t } from "/js/components/i18n.js";
 import { state, els, apiFetch, API } from "/js/chat/state.js";
 import { renderMessages, scrollToBottom } from "/js/chat/messages.js";
 
+/** Re-renders the channel list sidebar with unread badges and active state. */
 export function renderSidebar() {
 	els.channelList.innerHTML = "";
 
@@ -38,6 +39,7 @@ export function renderSidebar() {
 	}
 }
 
+/** Switches the active channel, loads its history if needed, and updates the view. */
 export async function selectChannel(code) {
 	state.active = code;
 	delete state.unread[code];
@@ -68,11 +70,13 @@ export async function selectChannel(code) {
 	els.input.focus();
 }
 
+/** Shows the empty state and hides the chat view. */
 export function showEmpty() {
 	els.emptyState.classList.remove("slv-hidden");
 	els.chatView.classList.add("slv-hidden");
 }
 
+/** Hides the empty state and shows the chat view. */
 export function showChatView() {
 	els.emptyState.classList.add("slv-hidden");
 	els.chatView.classList.remove("slv-hidden");

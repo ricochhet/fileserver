@@ -11,7 +11,8 @@ const (
 CREATE TABLE IF NOT EXISTS users (
 	username     TEXT PRIMARY KEY,
 	password     TEXT NOT NULL,
-	display_name TEXT NOT NULL DEFAULT ''
+	display_name TEXT NOT NULL DEFAULT '',
+	is_admin     INTEGER NOT NULL DEFAULT 0
 )`
 
 	queryCreateChannelsTable = `
@@ -34,23 +35,33 @@ CREATE TABLE IF NOT EXISTS messages (
 	queryCreateMessagesIndex = `
 CREATE INDEX IF NOT EXISTS idx_messages_channel_ts
 	ON messages (channel_code, timestamp DESC)`
+
+	// queryMigrateAddIsAdmin adds the is_admin column to existing databases that
+	// pre-date the column.  The caller must tolerate a "duplicate column" error.
+	queryMigrateAddIsAdmin = `ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0`
 )
 
 // User queries.
 const (
 	queryUpsertUser = `
-INSERT INTO users (username, password, display_name) VALUES (?, ?, ?)
+INSERT INTO users (username, password, display_name, is_admin) VALUES (?, ?, ?, ?)
 ON CONFLICT(username) DO UPDATE SET
     password     = excluded.password,
-    display_name = excluded.display_name`
+    display_name = excluded.display_name,
+    is_admin     = excluded.is_admin`
+
+	// queryInsertUserIfNotExists is used at startup to seed config-defined users
+	// without overwriting changes made via the CLI or admin panel after first boot.
+	queryInsertUserIfNotExists = `
+INSERT OR IGNORE INTO users (username, password, display_name, is_admin) VALUES (?, ?, ?, ?)`
 
 	queryGetUser = `
-SELECT username, password, display_name
+SELECT username, password, display_name, is_admin
 FROM users
 WHERE username = ?`
 
 	queryListUsers = `
-SELECT username, display_name
+SELECT username, display_name, is_admin
 FROM users
 ORDER BY username ASC`
 

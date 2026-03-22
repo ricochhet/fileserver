@@ -26,8 +26,8 @@ var (
 		{Usage: "fileserver dump [PATH]", Desc: "Dump embedded files to disk"},
 		{Usage: "fileserver version", Desc: "Display fileserver version"},
 		{
-			Usage: "fileserver user add <username> [--display-name NAME]",
-			Desc:  "Add or update a user",
+			Usage: "fileserver user add <username> [--display-name NAME] [--admin]",
+			Desc:  "Add or update a user (--admin grants administrative privileges)",
 		},
 		{Usage: "fileserver user remove <username>", Desc: "Remove a user"},
 		{Usage: "fileserver user list", Desc: "List all users"},

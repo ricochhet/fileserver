@@ -9,16 +9,21 @@ import (
 type meResponse struct {
 	Username    string `json:"username"`
 	DisplayName string `json:"displayName"`
+	IsAdmin     bool   `json:"isAdmin"`
 }
 
-// meHandler returns the authenticated user's identity.
+// meHandler returns the authenticated user's identity, including their admin flag.
 func meHandler(resolve UserResolver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		username, displayName := resolve(r)
+		username, displayName, isAdmin := resolve(r)
 		serverutil.WriteJSON(
 			w,
 			http.StatusOK,
-			meResponse{Username: username, DisplayName: displayName},
+			meResponse{
+				Username:    username,
+				DisplayName: displayName,
+				IsAdmin:     isAdmin,
+			},
 		)
 	}
 }

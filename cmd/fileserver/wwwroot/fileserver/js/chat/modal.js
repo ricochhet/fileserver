@@ -2,20 +2,22 @@ import { t } from "/js/components/i18n.js";
 import { state, els, apiFetch, API } from "/js/chat/state.js";
 import { renderSidebar, selectChannel } from "/js/chat/channels.js";
 
+/** Clears and opens the join-channel modal, focusing the code input. */
 export function openJoinModal() {
 	els.joinCode.value = "";
 	els.joinName.value = "";
 	els.joinError.classList.add("slv-hidden");
 	els.joinError.textContent = "";
 	els.joinModal.classList.remove("slv-hidden");
-	// Defer focus until after the browser paints the now-visible modal.
 	requestAnimationFrame(() => els.joinCode.focus());
 }
 
+/** Hides the join-channel modal. */
 export function closeJoinModal() {
 	els.joinModal.classList.add("slv-hidden");
 }
 
+/** Validates and submits the join form, then switches to the newly joined channel. */
 export async function submitJoin() {
 	const code = els.joinCode.value.trim();
 	if (!code) {
@@ -46,6 +48,7 @@ export async function submitJoin() {
 	}
 }
 
+/** Displays an error message in the join modal. */
 function showJoinError(msg) {
 	els.joinError.textContent = msg;
 	els.joinError.classList.remove("slv-hidden");

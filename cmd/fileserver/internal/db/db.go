@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	sqlite "modernc.org/sqlite"
@@ -21,25 +22,22 @@ var (
 	ErrChannelNotFound    = errors.New("db: channel not found")
 )
 
-// DB wraps a SQLite connection and exposes typed operations used by the server.
 type DB struct {
 	conn *sql.DB
 }
 
-// User is a stored user account.
 type User struct {
 	Username    string
 	Password    string
 	DisplayName string
+	IsAdmin     bool
 }
 
-// Channel is a stored chat channel.
 type Channel struct {
 	Code string
 	Name string
 }
 
-// Message is a stored chat message.
 type Message struct {
 	ID          string
 	ChannelCode string
@@ -50,17 +48,17 @@ type Message struct {
 	Timestamp   time.Time
 }
 
-// connector implements driver.Connector for sqlite.Driver, enabling sql.OpenDB
-// without relying on the global driver registry (and thus a blank import).
 type connector struct {
 	drv  *sqlite.Driver
 	name string
 }
 
+// Connect returns a new connection the database.
 func (c *connector) Connect(_ context.Context) (driver.Conn, error) {
 	return c.drv.Open(c.name)
 }
 
+// Driver returns the sqlite.Driver from the connector.
 func (c *connector) Driver() driver.Driver {
 	return c.drv
 }
@@ -71,7 +69,6 @@ func Open(path string) (*DB, error) {
 
 	ctx := context.Background()
 
-	// WAL allows concurrent readers alongside the single writer without blocking on every write.
 	if _, err := conn.ExecContext(ctx, queryPragmas); err != nil {
 		conn.Close()
 		return nil, fmt.Errorf("db.Open pragma: %w", err)
@@ -91,9 +88,42 @@ func (d *DB) Close() error {
 	return d.conn.Close()
 }
 
-// UpsertUser inserts or updates a user record, keeping config credentials in sync on each startup.
-func (d *DB) UpsertUser(ctx context.Context, username, password, displayName string) error {
-	_, err := d.conn.ExecContext(ctx, queryUpsertUser, username, password, displayName)
+// UpsertUser inserts or updates a user record.
+func (d *DB) UpsertUser(
+	ctx context.Context,
+	username, password, displayName string,
+	isAdmin bool,
+) error {
+	isAdminInt := 0
+	if isAdmin {
+		isAdminInt = 1
+	}
+
+	_, err := d.conn.ExecContext(ctx, queryUpsertUser, username, password, displayName, isAdminInt)
+
+	return err
+}
+
+// InsertUserIfNotExists writes a new user row only when no row with that
+// username already exists.
+func (d *DB) InsertUserIfNotExists(
+	ctx context.Context,
+	username, password, displayName string,
+	isAdmin bool,
+) error {
+	isAdminInt := 0
+	if isAdmin {
+		isAdminInt = 1
+	}
+
+	_, err := d.conn.ExecContext(
+		ctx,
+		queryInsertUserIfNotExists,
+		username,
+		password,
+		displayName,
+		isAdminInt,
+	)
 
 	return err
 }
@@ -101,8 +131,11 @@ func (d *DB) UpsertUser(ctx context.Context, username, password, displayName str
 // GetUser returns the user with the given username, or ErrUserNotFound if no row exists.
 func (d *DB) GetUser(ctx context.Context, username string) (*User, error) {
 	u := &User{}
+
+	var isAdminInt int
+
 	err := d.conn.QueryRowContext(ctx, queryGetUser, username).
-		Scan(&u.Username, &u.Password, &u.DisplayName)
+		Scan(&u.Username, &u.Password, &u.DisplayName, &isAdminInt)
 
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrUserNotFound
@@ -111,6 +144,8 @@ func (d *DB) GetUser(ctx context.Context, username string) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	u.IsAdmin = isAdminInt != 0
 
 	return u, nil
 }
@@ -205,10 +240,14 @@ func (d *DB) ListUsers(ctx context.Context) ([]*User, error) {
 
 	for rows.Next() {
 		u := &User{}
-		if err := rows.Scan(&u.Username, &u.DisplayName); err != nil {
+
+		var isAdminInt int
+
+		if err := rows.Scan(&u.Username, &u.DisplayName, &isAdminInt); err != nil {
 			return nil, err
 		}
 
+		u.IsAdmin = isAdminInt != 0
 		users = append(users, u)
 	}
 
@@ -312,5 +351,19 @@ func (d *DB) migrate(ctx context.Context) error {
 		}
 	}
 
+	d.migrateAddColumn(ctx, queryMigrateAddIsAdmin)
+
 	return nil
+}
+
+// migrateAddColumn executes an ALTER TABLE … ADD COLUMN statement and silently
+// ignores the error when the column already exists (SQLite error code 1, message
+// contains "duplicate column").
+func (d *DB) migrateAddColumn(ctx context.Context, stmt string) {
+	if _, err := d.conn.ExecContext(ctx, stmt); err != nil {
+		if !strings.Contains(err.Error(), "duplicate column") {
+			// Unexpected error — log it but do not abort startup.
+			fmt.Printf("db: migrateAddColumn warning: %v\n", err)
+		}
+	}
 }

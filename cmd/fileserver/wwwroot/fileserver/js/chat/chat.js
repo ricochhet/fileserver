@@ -24,6 +24,7 @@ const MAX_RECONNECT_DELAY = 30_000;
 let reconnectDelay = MIN_RECONNECT_DELAY;
 let reconnectTimer = null;
 
+/** Updates the connection status banner; hides it when the key is "connected". */
 function setConnStatus(key) {
 	if (!els.connStatus) return;
 	if (key === "connected") {
@@ -35,10 +36,7 @@ function setConnStatus(key) {
 	}
 }
 
-// refreshChannel fetches the latest history for code from the server (which now
-// reads from SQLite) and patches the in-memory cache and live view.  This is
-// called after every successful SSE reconnection so any messages sent while the
-// connection was down are caught up immediately.
+/** Re-fetches message history for a channel and updates the view if it is currently active. */
 async function refreshChannel(code) {
 	try {
 		const msgs = await apiFetch(
@@ -54,6 +52,7 @@ async function refreshChannel(code) {
 	}
 }
 
+/** Opens an SSE connection with exponential-backoff reconnect on failure. */
 function connectSSE() {
 	state.sse?.close();
 	state.sse = null;
@@ -65,9 +64,6 @@ function connectSSE() {
 		reconnectDelay = MIN_RECONNECT_DELAY;
 		setConnStatus("connected");
 
-		// Re-fetch history for the active channel to cover any gap that
-		// opened while the SSE connection was down.  Non-active channels have
-		// their cache invalidated so they'll be refreshed lazily on next open.
 		for (const code of Object.keys(state.messages)) {
 			if (code !== state.active) {
 				delete state.messages[code];
@@ -89,9 +85,6 @@ function connectSSE() {
 	};
 
 	es.onerror = () => {
-		// EventSource fires onerror both for transient blips and permanent
-		// failures.  In both cases we close the broken source, show status, and
-		// schedule a reconnect with exponential backoff.
 		es.close();
 		state.sse = null;
 		setConnStatus("chat_reconnecting");
@@ -106,6 +99,7 @@ function connectSSE() {
 	};
 }
 
+/** Fetches the current user and channel list, then starts the SSE connection. */
 async function boot() {
 	try {
 		state.me = await apiFetch(API.me);
@@ -128,6 +122,7 @@ async function boot() {
 	bindEvents();
 }
 
+/** Renders the signed-in user's display name into the identity element. */
 function renderIdentity() {
 	if (!state.me) return;
 	els.identity.innerHTML =
@@ -135,6 +130,7 @@ function renderIdentity() {
 		`<span class="slv-chat-display-name">${escHtml(state.me.displayName)}</span>`;
 }
 
+/** Routes an incoming SSE message to the active log or increments the unread count. */
 function handleIncomingMessage(msg) {
 	const { channelCode: code } = msg;
 	if (!state.channels.find((c) => c.code === code)) return;
@@ -152,6 +148,7 @@ function handleIncomingMessage(msg) {
 	}
 }
 
+/** Reads the input, sends a POST, and re-enables the form on completion. */
 async function sendMessage() {
 	const body = els.input.value.trim();
 	if (!body || !state.active) return;
@@ -176,6 +173,7 @@ async function sendMessage() {
 	}
 }
 
+/** Attaches all UI event listeners after the initial render. */
 function bindEvents() {
 	els.sendBtn.addEventListener("click", sendMessage);
 	els.input.addEventListener("keydown", (e) => {
@@ -211,8 +209,8 @@ function bindEvents() {
 	});
 }
 
-// leaveCurrentChannel lives here rather than channels.js to avoid a
-// channels.js → chat.js circular import (bindEvents is in this file).
+/** Leaves the active channel, removes it from local state, and switches to the next channel or empty state.
+ *  Kept in chat.js rather than channels.js to avoid a circular import with bindEvents. */
 async function leaveCurrentChannel() {
 	const code = state.active;
 	if (!code) return;

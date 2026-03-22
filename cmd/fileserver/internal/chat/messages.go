@@ -6,23 +6,28 @@ import (
 	"strings"
 
 	"github.com/ricochhet/fileserver/cmd/fileserver/internal/serverutil"
-	"github.com/ricochhet/fileserver/pkg/httputil"
+	"github.com/ricochhet/fileserver/pkg/errutil"
 )
+
+type messageBody struct {
+	Channel string `json:"channel"`
+	Body    string `json:"body"`
+}
 
 // messagesHandler returns message history for a channel.
 func messagesHandler(store *Store, resolve UserResolver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		username, _ := resolve(r)
+		username, _, _ := resolve(r)
 
 		code := strings.TrimSpace(r.URL.Query().Get("channel"))
 		if code == "" {
-			httputil.Error(w, http.StatusBadRequest, `query param "channel" is required`)
+			errutil.HTTPBadRequestf(w, `query param "channel" is required`)
 			return
 		}
 
 		msgs, err := store.Messages(r.Context(), username, code)
 		if err != nil {
-			httputil.Error(w, http.StatusForbidden, err.Error())
+			errutil.HTTPForbiddenf(w, "%s", err.Error())
 			return
 		}
 
@@ -37,18 +42,15 @@ func messagesHandler(store *Store, resolve UserResolver) http.HandlerFunc {
 // postMessageHandler posts a message to a channel on behalf of the authenticated user.
 func postMessageHandler(store *Store, resolve UserResolver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		username, displayName := resolve(r)
+		username, displayName, _ := resolve(r)
 		if username == "" {
-			httputil.Error(w, http.StatusUnauthorized, "unauthorized")
+			errutil.HTTPUnauthorized(w)
 			return
 		}
 
-		var body struct {
-			Channel string `json:"channel"`
-			Body    string `json:"body"`
-		}
+		body := messageBody{}
 		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-			httputil.Error(w, http.StatusBadRequest, "invalid JSON body")
+			errutil.HTTPBadRequestf(w, "invalid JSON body")
 			return
 		}
 
@@ -56,18 +58,18 @@ func postMessageHandler(store *Store, resolve UserResolver) http.HandlerFunc {
 		body.Body = strings.TrimSpace(body.Body)
 
 		if body.Channel == "" {
-			httputil.Error(w, http.StatusBadRequest, `"channel" is required`)
+			errutil.HTTPBadRequestf(w, `"channel" is required`)
 			return
 		}
 
 		if body.Body == "" {
-			httputil.Error(w, http.StatusBadRequest, `"body" must not be empty`)
+			errutil.HTTPBadRequestf(w, `"body" must not be empty`)
 			return
 		}
 
 		msg, err := store.Post(r.Context(), username, displayName, body.Channel, body.Body)
 		if err != nil {
-			httputil.Error(w, http.StatusForbidden, err.Error())
+			errutil.HTTPForbiddenf(w, "%s", err.Error())
 			return
 		}
 

@@ -94,6 +94,11 @@
 				</div>
 
 				<div
+					id="slv-conn-status"
+					class="slv-conn-status slv-hidden"
+				></div>
+
+				<div
 					id="slv-chat-log"
 					class="slv-chat-log"
 					aria-live="polite"
@@ -128,7 +133,7 @@
 			role="dialog"
 			aria-modal="true"
 		>
-			<div class="slv-chat-modal-backdrop" id="slv-join-backdrop"></div>
+			<div id="slv-join-backdrop" class="slv-overlay-backdrop"></div>
 			<div class="slv-chat-modal-box">
 				<h3 data-i18n="chat_join_modal_title">join a channel</h3>
 

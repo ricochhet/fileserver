@@ -24,30 +24,27 @@ type BasicAuth struct {
 	Password string `json:"password"`
 }
 
-// FormAuthUser is a single form-auth user; DisplayName is auto-generated if empty.
 type FormAuthUser struct {
 	Username    string `json:"username"`
 	Password    string `json:"password"`
 	DisplayName string `json:"displayName"`
+	Admin       bool   `json:"admin"`
 }
 
-// FormAuth configures form-based session cookie authentication.
 type FormAuth struct {
 	Users          []FormAuthUser `json:"users"`
 	Secret         string         `json:"secret"`
 	PublicPrefixes []string       `json:"publicPrefixes"`
 }
 
-// ChatChannel is a config-defined channel seeded at startup; users still need the code to join.
 type ChatChannel struct {
 	Code string `json:"code"`
 	Name string `json:"name"`
 }
 
-// Features controls which optional server features are active.
-// All features are enabled by default; set a Disable flag to true to turn one off.
 type Features struct {
-	ChatRoute     string `json:"chatRoute"` // defaults to "/chat" when empty
+	AdminRoute    string `json:"adminRoute"`
+	ChatRoute     string `json:"chatRoute"`
 	DisableChat   bool   `json:"disableChat"`
 	DisableBrowse bool   `json:"disableBrowse"`
 }
@@ -68,6 +65,8 @@ type Server struct {
 	FormAuth  FormAuth  `json:"formAuth"`
 
 	ChatChannels []ChatChannel `json:"chatChannels"`
+
+	UploadDir string `json:"uploadDir"`
 
 	ImageExts        []string `json:"imageExts"`
 	TextExts         []string `json:"textExts"`

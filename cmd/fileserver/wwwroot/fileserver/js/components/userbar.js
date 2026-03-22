@@ -1,5 +1,7 @@
 import { t, whenReady } from "/js/components/i18n.js";
+import { initAdmin } from "/js/admin/admin.js";
 
+/** Escapes special HTML characters in a string. */
 function escHtml(s) {
 	return String(s)
 		.replaceAll("&", "&amp;")
@@ -16,7 +18,6 @@ const mePromise = fetch(`${window.FS_CHAT_ROUTE ?? "/chat"}/api/me`)
 await whenReady(async () => {
 	const me = await mePromise;
 
-	// Empty or missing username → form auth not active, or no valid session.
 	if (!me?.username) return;
 
 	const container = document.getElementById("slv-user-bar");
@@ -30,4 +31,6 @@ await whenReady(async () => {
 		`<span class="slv-chat-display-name">${escHtml(name)}</span>` +
 		`</span>` +
 		`<a href="/auth/logout" class="slv-btn secondary">${escHtml(t("chat_logout_btn"))}</a>`;
+
+	initAdmin(me);
 });

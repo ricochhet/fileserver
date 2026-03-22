@@ -14,9 +14,12 @@ export function escHtml(s) {
 		.replaceAll('"', "&quot;");
 }
 
+/** Sets the current sort column. */
 export function setSortCol(col) {
 	sortCol = col;
 }
+
+/** Sets the current sort direction. */
 export function setSortDir(dir) {
 	sortDir = dir;
 }
@@ -56,6 +59,7 @@ export function updateSortIndicators() {
 	}
 }
 
+/** Builds and returns a table row element for a single directory entry. */
 function makeRow(e, imageExts, textExts, onPreview) {
 	const previewable = imageExts[e.ext] || textExts[e.ext] || e.ext === ".pdf";
 
@@ -126,7 +130,6 @@ function makeRow(e, imageExts, textExts, onPreview) {
 			try {
 				await navigator.clipboard.writeText(url);
 			} catch {
-				// Fallback for browsers without the Clipboard API.
 				const ta = Object.assign(document.createElement("textarea"), {
 					value: url,
 					style: "position:fixed;opacity:0",

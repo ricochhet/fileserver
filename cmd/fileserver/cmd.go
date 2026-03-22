@@ -152,11 +152,12 @@ func channelAddCmd(database *db.DB, args []string) error {
 	fs := flag.NewFlagSet("channel add", flag.ContinueOnError)
 	name := fs.String("name", "", "Display name (defaults to \"#<code>\" if empty)")
 
-	if err := fs.Parse(args); err != nil {
+	code, flagArgs := extractPositional(args)
+	if err := fs.Parse(flagArgs); err != nil {
 		return err
 	}
 
-	code := strings.TrimSpace(fs.Arg(0))
+	code = strings.TrimSpace(code)
 	if code == "" {
 		return errors.New("usage: fileserver channel add <code> [--name NAME]")
 	}
@@ -225,7 +226,7 @@ func channelListCmd(database *db.DB) error {
 // userCmd dispatches the user management subcommands: add, remove, list.
 func userCmd(a ...string) error {
 	return runEntityCmd("user", a, []string{
-		"  fileserver user add <username> [--display-name NAME]\tAdd or update a user",
+		"  fileserver user add <username> [--display-name NAME] [--admin]\tAdd or update a user",
 		"  fileserver user remove <username>\tRemove a user",
 		"  fileserver user list\tList all users",
 	}, func(sub string, args []string, database *db.DB) error {
@@ -242,18 +243,39 @@ func userCmd(a ...string) error {
 	})
 }
 
+// extractPositional splits args into (positional, flagArgs) by pulling out the
+// first token that does not start with "-". This lets users place the positional
+// argument anywhere relative to named flags, e.g. both of these work:
+//
+//	user add alice --admin --display-name "Alice"
+//	user add --admin --display-name "Alice" alice
+func extractPositional(args []string) (positional string, flagArgs []string) {
+	for _, a := range args {
+		if !strings.HasPrefix(a, "-") && positional == "" {
+			positional = a
+		} else {
+			flagArgs = append(flagArgs, a)
+		}
+	}
+
+	return positional, flagArgs
+}
+
 // userAddCmd adds or updates a user, prompting for a password interactively.
+// Pass --admin to grant the user administrative privileges.
 func userAddCmd(database *db.DB, args []string) error {
 	fs := flag.NewFlagSet("user add", flag.ContinueOnError)
 	displayName := fs.String("display-name", "", "Display name (auto-generated if empty)")
+	isAdmin := fs.Bool("admin", false, "Grant admin privileges to this user")
 
-	if err := fs.Parse(args); err != nil {
+	username, flagArgs := extractPositional(args)
+	if err := fs.Parse(flagArgs); err != nil {
 		return err
 	}
 
-	username := strings.TrimSpace(fs.Arg(0))
+	username = strings.TrimSpace(username)
 	if username == "" {
-		return errors.New("usage: fileserver user add <username> [--display-name NAME]")
+		return errors.New("usage: fileserver user add <username> [--display-name NAME] [--admin]")
 	}
 
 	password, err := readPasswordConfirmed()
@@ -266,11 +288,17 @@ func userAddCmd(database *db.DB, args []string) error {
 		username,
 		password,
 		*displayName,
+		*isAdmin,
 	); err != nil {
 		return fmt.Errorf("user add: %w", err)
 	}
 
-	logutil.Infof(logutil.Get(), "User %q saved.\n", username)
+	adminNote := ""
+	if *isAdmin {
+		adminNote = " (admin)"
+	}
+
+	logutil.Infof(logutil.Get(), "User %q saved%s.\n", username, adminNote)
 
 	return nil
 }
@@ -299,7 +327,7 @@ func userRemoveCmd(database *db.DB, args []string) error {
 	return nil
 }
 
-// userListCmd prints all users in a tabulated format.
+// userListCmd prints all users in a tabulated format, including their admin status.
 func userListCmd(database *db.DB) error {
 	users, err := database.ListUsers(context.Background())
 	if err != nil {
@@ -312,8 +340,8 @@ func userListCmd(database *db.DB) error {
 	}
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "USERNAME\tDISPLAY NAME")
-	fmt.Fprintln(w, "--------\t------------")
+	fmt.Fprintln(w, "USERNAME\tDISPLAY NAME\tADMIN")
+	fmt.Fprintln(w, "--------\t------------\t-----")
 
 	for _, u := range users {
 		dn := u.DisplayName
@@ -321,7 +349,12 @@ func userListCmd(database *db.DB) error {
 			dn = "(auto)"
 		}
 
-		fmt.Fprintf(w, "%s\t%s\n", u.Username, dn)
+		admin := ""
+		if u.IsAdmin {
+			admin = "yes"
+		}
+
+		fmt.Fprintf(w, "%s\t%s\t%s\n", u.Username, dn, admin)
 	}
 
 	return w.Flush()

@@ -9,18 +9,19 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/ricochhet/fileserver/pkg/errutil"
 	"github.com/ricochhet/fileserver/pkg/httputil"
 )
 
-// UserResolver extracts the authenticated username and display name from a request.
-type UserResolver func(r *http.Request) (username, displayName string)
+// UserResolver extracts the authenticated username, display name, and admin flag from a request.
+type UserResolver func(r *http.Request) (username, displayName string, isAdmin bool)
 
 // Handler returns an http.Handler mounting the chat page and REST/SSE endpoints at /chat.
-func Handler(store *Store, resolve UserResolver, htmlPage []byte) http.Handler {
+func Handler(store *Store, resolve UserResolver, html []byte) http.Handler {
 	r := chi.NewRouter()
 
-	if len(htmlPage) > 0 {
-		r.Get("/", serveBytes("chat.html", "text/html; charset=utf-8", htmlPage))
+	if len(html) > 0 {
+		r.Get("/", serveBytes("chat.html", "text/html; charset=utf-8", html))
 	}
 
 	r.Get("/api/me", meHandler(resolve))
@@ -44,26 +45,26 @@ func serveBytes(name, contentType string, data []byte) http.HandlerFunc {
 		}
 	}
 
-	modTime := time.Now()
+	mod := time.Now()
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		httputil.SetHeader(w, httputil.HeaderContentType, contentType)
-		http.ServeContent(w, r, name, modTime, bytes.NewReader(data))
+		http.ServeContent(w, r, name, mod, bytes.NewReader(data))
 	}
 }
 
 // eventsHandler streams new messages to the client over SSE with 30s keepalives.
 func eventsHandler(store *Store, resolve UserResolver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		username, _ := resolve(r)
+		username, _, _ := resolve(r)
 		if username == "" {
-			httputil.Error(w, http.StatusUnauthorized, "unauthorized")
+			errutil.HTTPUnauthorized(w)
 			return
 		}
 
 		flusher, ok := w.(http.Flusher)
 		if !ok {
-			httputil.Error(w, http.StatusInternalServerError, "streaming not supported")
+			errutil.HTTPInternalServerErrorf(w, "streaming not supported")
 			return
 		}
 
