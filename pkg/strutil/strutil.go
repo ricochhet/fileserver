@@ -5,6 +5,15 @@ import (
 	"strings"
 )
 
+// Or returns v if it's not empty, otherwise return or.
+func Or(v, or string) string {
+	if v == "" {
+		return or
+	}
+
+	return v
+}
+
 // ToSlice converts a string to a slice based on the separator provided.
 func ToSlice(s, sep string) []string {
 	return strings.Split(s, sep)

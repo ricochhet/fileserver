@@ -22,6 +22,7 @@ import (
 	"github.com/ricochhet/fileserver/pkg/embedutil"
 	"github.com/ricochhet/fileserver/pkg/errutil"
 	"github.com/ricochhet/fileserver/pkg/logutil"
+	"github.com/ricochhet/fileserver/pkg/strutil"
 )
 
 const (
@@ -202,11 +203,7 @@ func (c *Context) maybeChat(r *chi.Mux, cfg configutil.Server) {
 		return
 	}
 
-	chatRoute := cfg.Features.ChatRoute
-	if chatRoute == "" {
-		chatRoute = defaultChatRoute
-	}
-
+	chatRoute := strutil.Or(cfg.Features.ChatRoute, defaultChatRoute)
 	resolver := func(req *http.Request) (string, string, bool) {
 		return auth.UsernameFromCtx(req), auth.DisplayNameFromCtx(req), auth.IsAdminFromCtx(req)
 	}

@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ricochhet/fileserver/pkg/strutil"
 	sqlite "modernc.org/sqlite"
 )
 
@@ -215,10 +216,7 @@ func (d *DB) GetMessages(ctx context.Context, code string, limit int) ([]*Messag
 
 // Path returns the path for fileserver.db next to the running executable.
 func Path(s string) string {
-	path := s
-	if s == "" {
-		path = defaultDbPath
-	}
+	path := strutil.Or(s, defaultDbPath)
 
 	exe, err := os.Executable()
 	if err != nil {

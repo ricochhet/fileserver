@@ -14,6 +14,7 @@ import (
 	"github.com/ricochhet/fileserver/pkg/embedutil"
 	"github.com/ricochhet/fileserver/pkg/errutil"
 	"github.com/ricochhet/fileserver/pkg/fsutil"
+	"github.com/ricochhet/fileserver/pkg/sliceutil"
 )
 
 const (
@@ -112,9 +113,9 @@ func Handler(
 ) http.Handler {
 	route = strings.TrimSuffix(route, "/")
 
-	imageExts := maybeSlice(cfg.ImageExts, defaultImageExts)
-	textExts := maybeSlice(cfg.TextExts, defaultTextExts)
-	readmeCandidates := maybeSlice(cfg.ReadmeCandidates, defaultReadmeCandidates)
+	imageExts := sliceutil.Or(cfg.ImageExts, defaultImageExts)
+	textExts := sliceutil.Or(cfg.TextExts, defaultTextExts)
+	readmeCandidates := sliceutil.Or(cfg.ReadmeCandidates, defaultReadmeCandidates)
 
 	imageExtsJSON := extSliceToJSObject(imageExts)
 	textExtsJSON := extSliceToJSObject(textExts)
@@ -174,13 +175,4 @@ func Handler(
 			http.ServeFile(w, r, abs)
 		}
 	})
-}
-
-// maybeSlice returns s if non-empty, otherwise returns fallback.
-func maybeSlice(s, fallback []string) []string {
-	if len(s) == 0 {
-		return fallback
-	}
-
-	return s
 }
