@@ -14,6 +14,12 @@ CREATE TABLE IF NOT EXISTS users (
 	display_name TEXT NOT NULL DEFAULT ''
 )`
 
+	queryCreateChannelsTable = `
+CREATE TABLE IF NOT EXISTS channels (
+	code TEXT PRIMARY KEY,
+	name TEXT NOT NULL
+)`
+
 	queryCreateMessagesTable = `
 CREATE TABLE IF NOT EXISTS messages (
 	id           TEXT PRIMARY KEY,
@@ -51,6 +57,28 @@ ORDER BY username ASC`
 	queryDeleteUser = `
 DELETE FROM users
 WHERE username = ?`
+)
+
+// Channel queries.
+const (
+	queryUpsertChannel = `
+INSERT INTO channels (code, name) VALUES (?, ?)
+ON CONFLICT(code) DO UPDATE SET
+    name = excluded.name`
+
+	queryGetChannel = `
+SELECT code, name
+FROM channels
+WHERE code = ?`
+
+	queryListChannels = `
+SELECT code, name
+FROM channels
+ORDER BY code ASC`
+
+	queryDeleteChannel = `
+DELETE FROM channels
+WHERE code = ?`
 )
 
 // Message queries.

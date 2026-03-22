@@ -18,6 +18,13 @@ import (
 	"golang.org/x/term"
 )
 
+// Subcommand name constants shared across entity dispatchers.
+const (
+	subCmdAdd    = "add"
+	subCmdRemove = "remove"
+	subCmdList   = "list"
+)
+
 // dumpCmd dumps embedded files under path to a local dump/ directory.
 func dumpCmd(a ...string) error {
 	return timeutil.Timer(func() error {
@@ -69,21 +76,27 @@ func serverCmd(s interface{ StartServer() error }) error {
 	})
 }
 
-// userCmd dispatches the user management subcommands: add, remove, list.
-func userCmd(a ...string) error {
+// runEntityCmd is the shared skeleton for entity management commands (user, channel, …).
+// It prints usageLines when called with no args, opens the database, then hands off
+// to dispatch(sub, args, db). dispatch should return a non-nil error for unknown subs.
+func runEntityCmd(
+	entity string,
+	args []string,
+	usageLines []string,
+	dispatch func(sub string, args []string, database *db.DB) error,
+) error {
 	usage := func() {
 		w := tabwriter.NewWriter(os.Stderr, 0, 0, 2, ' ', 0)
 		fmt.Fprintln(w, "Usage:")
-		fmt.Fprintln(
-			w,
-			"  fileserver user add <username> [--display-name NAME]\tAdd or update a user",
-		)
-		fmt.Fprintln(w, "  fileserver user remove <username>\tRemove a user")
-		fmt.Fprintln(w, "  fileserver user list\tList all users")
+
+		for _, l := range usageLines {
+			fmt.Fprintln(w, l)
+		}
+
 		w.Flush()
 	}
 
-	if len(a) == 0 {
+	if len(args) == 0 {
 		usage()
 		return nil
 	}
@@ -92,24 +105,141 @@ func userCmd(a ...string) error {
 
 	database, err := db.Open(path)
 	if err != nil {
-		return fmt.Errorf("user: open database %q: %w", path, err)
+		return fmt.Errorf("%s: open database %q: %w", entity, path, err)
 	}
 	defer database.Close()
 
-	sub := strings.ToLower(a[0])
-	args := a[1:]
+	sub := strings.ToLower(args[0])
+	rest := args[1:]
 
-	switch sub {
-	case "add", "a":
-		return userAddCmd(database, args)
-	case "remove", "rm", "r":
-		return userRemoveCmd(database, args)
-	case "list", "l":
-		return userListCmd(database)
-	default:
-		usage()
-		return fmt.Errorf("user: unknown subcommand %q", a[0])
+	if err := dispatch(sub, rest, database); err != nil {
+		if errors.Is(err, errUnknownSubCmd) {
+			usage()
+			return fmt.Errorf("%s: unknown subcommand %q", entity, args[0])
+		}
+
+		return err
 	}
+
+	return nil
+}
+
+// errUnknownSubCmd is returned by a dispatch func when the subcommand is not recognized.
+var errUnknownSubCmd = errors.New("unknown subcommand")
+
+// channelCmd dispatches the channel management subcommands: add, remove, list.
+func channelCmd(a ...string) error {
+	return runEntityCmd("channel", a, []string{
+		"  fileserver channel add <code> [--name NAME]\tAdd or update a channel",
+		"  fileserver channel remove <code>\tRemove a channel",
+		"  fileserver channel list\tList all channels",
+	}, func(sub string, args []string, database *db.DB) error {
+		switch sub {
+		case subCmdAdd, "a":
+			return channelAddCmd(database, args)
+		case subCmdRemove, "rm", "r":
+			return channelRemoveCmd(database, args)
+		case subCmdList, "l":
+			return channelListCmd(database)
+		default:
+			return errUnknownSubCmd
+		}
+	})
+}
+
+// channelAddCmd adds or updates a channel by code with an optional display name.
+func channelAddCmd(database *db.DB, args []string) error {
+	fs := flag.NewFlagSet("channel add", flag.ContinueOnError)
+	name := fs.String("name", "", "Display name (defaults to \"#<code>\" if empty)")
+
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+
+	code := strings.TrimSpace(fs.Arg(0))
+	if code == "" {
+		return errors.New("usage: fileserver channel add <code> [--name NAME]")
+	}
+
+	n := strings.TrimSpace(*name)
+	if n == "" {
+		n = "#" + code
+	}
+
+	if err := database.UpsertChannel(context.Background(), code, n); err != nil {
+		return fmt.Errorf("channel add: %w", err)
+	}
+
+	logutil.Infof(logutil.Get(), "Channel %q (%s) saved.\n", code, n)
+
+	return nil
+}
+
+// channelRemoveCmd removes a channel by code.
+func channelRemoveCmd(database *db.DB, args []string) error {
+	if len(args) == 0 {
+		return errors.New("usage: fileserver channel remove <code>")
+	}
+
+	code := strings.TrimSpace(args[0])
+	if code == "" {
+		return errors.New("usage: fileserver channel remove <code>")
+	}
+
+	if err := database.DeleteChannel(context.Background(), code); err != nil {
+		if errors.Is(err, db.ErrChannelNotFound) {
+			return fmt.Errorf("channel remove: channel %q not found", code)
+		}
+
+		return fmt.Errorf("channel remove: %w", err)
+	}
+
+	logutil.Infof(logutil.Get(), "Channel %q removed.\n", code)
+
+	return nil
+}
+
+// channelListCmd prints all channels in a tabulated format.
+func channelListCmd(database *db.DB) error {
+	channels, err := database.ListChannels(context.Background())
+	if err != nil {
+		return fmt.Errorf("channel list: %w", err)
+	}
+
+	if len(channels) == 0 {
+		logutil.Infof(logutil.Get(), "No channels found.\n")
+		return nil
+	}
+
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	fmt.Fprintln(w, "CODE\tNAME")
+	fmt.Fprintln(w, "----\t----")
+
+	for _, ch := range channels {
+		fmt.Fprintf(w, "%s\t%s\n", ch.Code, ch.Name)
+	}
+
+	return w.Flush()
+}
+
+// userCmd dispatches the user management subcommands: add, remove, list.
+func userCmd(a ...string) error {
+	return runEntityCmd("user", a, []string{
+		"  fileserver user add <username> [--display-name NAME]\tAdd or update a user",
+		"  fileserver user remove <username>\tRemove a user",
+		"  fileserver user list\tList all users",
+	}, func(sub string, args []string, database *db.DB) error {
+		switch sub {
+		case subCmdAdd, "a":
+			return userAddCmd(database, args)
+		case subCmdRemove, "rm", "r":
+			return userRemoveCmd(database, args)
+		case subCmdList, "l":
+			return userListCmd(database)
+		default:
+			return errUnknownSubCmd
+		}
+	})
 }
 
 // userAddCmd adds or updates a user, prompting for a password interactively.

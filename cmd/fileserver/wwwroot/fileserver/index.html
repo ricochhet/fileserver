@@ -1,23 +1,25 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
+	<head>
+		<title>fileserver | online.</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="stylesheet" href="/css/base.css" />
+	</head>
 
-<head>
-    <title>fileserver | online.</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="/css/base.css">
-</head>
+	<body class="slv-ignore-darkreader">
+		<div class="slv-lang-wrap">
+			<div id="slv-user-bar" class="slv-user-bar"></div>
+			<select
+				id="slv-lang-select"
+				class="slv-lang-select"
+				aria-label="Language"
+			></select>
+		</div>
 
-<body class="slv-ignore-darkreader">
-    <div class="slv-lang-wrap">
-        <div id="slv-user-bar" class="slv-user-bar"></div>
-        <select id="slv-lang-select" class="slv-lang-select" aria-label="Language"></select>
-    </div>
+		<h1 data-i18n="index_heading">fileserver</h1>
+		<p data-i18n="index_body">Hello, World.</p>
 
-    <h1 data-i18n="index_heading">fileserver</h1>
-    <p data-i18n="index_body">Hello, World.</p>
-
-    <script type="module" src="/js/lang.js"></script>
-    <script type="module" src="/js/userbar.js"></script>
-</body>
-
+		<script type="module" src="/js/components/lang.js"></script>
+		<script type="module" src="/js/components/userbar.js"></script>
+	</body>
 </html>

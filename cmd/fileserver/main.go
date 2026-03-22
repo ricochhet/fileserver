@@ -70,6 +70,8 @@ func commands() (bool, error) {
 		return true, listCmd(rest...)
 	case "user", "u":
 		return true, userCmd(rest...)
+	case "channel", "ch":
+		return true, channelCmd(rest...)
 	case "help", "h":
 		cmds.Usage()
 	case "version", "v":

@@ -9,6 +9,26 @@ import (
 	"github.com/ricochhet/fileserver/pkg/httputil"
 )
 
+// availableChannelsHandler returns all channels in the store so the client can
+// present a pick-list in the join modal. Channels the user is already subscribed
+// to are included; the frontend filters them out.
+func availableChannelsHandler(store *Store, resolve UserResolver) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		username, _ := resolve(r)
+		if username == "" {
+			httputil.Error(w, http.StatusUnauthorized, "unauthorized")
+			return
+		}
+
+		all := store.AllChannels()
+		if all == nil {
+			all = []*Channel{}
+		}
+
+		serverutil.WriteJSON(w, http.StatusOK, all)
+	}
+}
+
 // channelsHandler returns the channels the authenticated user is subscribed to.
 func channelsHandler(store *Store, resolve UserResolver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

@@ -18,6 +18,7 @@ const defaultDbPath = "fileserver.db"
 var (
 	ErrUserNotFound       = errors.New("db: user not found")
 	ErrInvalidCredentials = errors.New("db: invalid credentials")
+	ErrChannelNotFound    = errors.New("db: channel not found")
 )
 
 // DB wraps a SQLite connection and exposes typed operations used by the server.
@@ -30,6 +31,12 @@ type User struct {
 	Username    string
 	Password    string
 	DisplayName string
+}
+
+// Channel is a stored chat channel.
+type Channel struct {
+	Code string
+	Name string
 }
 
 // Message is a stored chat message.
@@ -227,10 +234,74 @@ func (d *DB) DeleteUser(ctx context.Context, username string) error {
 	return nil
 }
 
+// UpsertChannel inserts or updates a channel record.
+func (d *DB) UpsertChannel(ctx context.Context, code, name string) error {
+	_, err := d.conn.ExecContext(ctx, queryUpsertChannel, code, name)
+	return err
+}
+
+// GetChannel returns the channel with the given code, or ErrChannelNotFound if absent.
+func (d *DB) GetChannel(ctx context.Context, code string) (*Channel, error) {
+	ch := &Channel{}
+	err := d.conn.QueryRowContext(ctx, queryGetChannel, code).Scan(&ch.Code, &ch.Name)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrChannelNotFound
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return ch, nil
+}
+
+// ListChannels returns all channels ordered by code.
+func (d *DB) ListChannels(ctx context.Context) ([]*Channel, error) {
+	rows, err := d.conn.QueryContext(ctx, queryListChannels)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var channels []*Channel
+
+	for rows.Next() {
+		ch := &Channel{}
+		if err := rows.Scan(&ch.Code, &ch.Name); err != nil {
+			return nil, err
+		}
+
+		channels = append(channels, ch)
+	}
+
+	return channels, rows.Err()
+}
+
+// DeleteChannel removes the channel with the given code, returning ErrChannelNotFound if absent.
+func (d *DB) DeleteChannel(ctx context.Context, code string) error {
+	res, err := d.conn.ExecContext(ctx, queryDeleteChannel, code)
+	if err != nil {
+		return err
+	}
+
+	n, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if n == 0 {
+		return ErrChannelNotFound
+	}
+
+	return nil
+}
+
 // migrate creates tables and indices idempotently; new statements can be appended safely.
 func (d *DB) migrate(ctx context.Context) error {
 	stmts := []string{
 		queryCreateUsersTable,
+		queryCreateChannelsTable,
 		queryCreateMessagesTable,
 		queryCreateMessagesIndex,
 	}

@@ -1,0 +1,38 @@
+[
+	{
+		"label": "Run Format",
+		"command": "mingw32-make fmt",
+		"cwd": "$ZED_WORKTREE_ROOT",
+		"reveal": "always",
+	},
+	{
+		"label": "Run Lint",
+		"command": "mingw32-make lint",
+		"cwd": "$ZED_WORKTREE_ROOT",
+		"reveal": "always",
+	},
+	{
+		"label": "Run Tidy",
+		"command": "mingw32-make tidy",
+		"cwd": "$ZED_WORKTREE_ROOT",
+		"reveal": "always",
+	},
+	{
+		"label": "Run Update",
+		"command": "mingw32-make update",
+		"cwd": "$ZED_WORKTREE_ROOT",
+		"reveal": "always",
+	},
+	{
+		"label": "Build fileserver (Windows)",
+		"command": "mingw32-make fileserver-windows",
+		"cwd": "$ZED_WORKTREE_ROOT",
+		"reveal": "always",
+	},
+	{
+		"label": "Build pm (Windows)",
+		"command": "mingw32-make pm-windows",
+		"cwd": "$ZED_WORKTREE_ROOT",
+		"reveal": "always",
+	},
+]

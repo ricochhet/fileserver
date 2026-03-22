@@ -131,6 +131,19 @@ func (s *Store) Subscriptions(username string) []*Channel {
 	return out
 }
 
+// AllChannels returns every channel known to the store, regardless of subscriptions.
+func (s *Store) AllChannels() []*Channel {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	out := make([]*Channel, 0, len(s.channels))
+	for _, ch := range s.channels {
+		out = append(out, ch)
+	}
+
+	return out
+}
+
 // IsSubscribed reports whether username holds a subscription to code.
 func (s *Store) IsSubscribed(username, code string) bool {
 	s.mu.RLock()

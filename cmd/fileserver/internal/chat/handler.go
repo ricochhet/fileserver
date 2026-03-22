@@ -25,6 +25,7 @@ func Handler(store *Store, resolve UserResolver, htmlPage []byte) http.Handler {
 
 	r.Get("/api/me", meHandler(resolve))
 	r.Get("/api/channels", channelsHandler(store, resolve))
+	r.Get("/api/channels/available", availableChannelsHandler(store, resolve))
 	r.Post("/api/channels/join", joinHandler(store, resolve))
 	r.Post("/api/channels/leave", leaveHandler(store, resolve))
 	r.Get("/api/messages", messagesHandler(store, resolve))

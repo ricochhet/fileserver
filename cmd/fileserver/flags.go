@@ -31,6 +31,12 @@ var (
 		},
 		{Usage: "fileserver user remove <username>", Desc: "Remove a user"},
 		{Usage: "fileserver user list", Desc: "List all users"},
+		{
+			Usage: "fileserver channel add <code> [--name NAME]",
+			Desc:  "Add or update a channel",
+		},
+		{Usage: "fileserver channel remove <code>", Desc: "Remove a channel"},
+		{Usage: "fileserver channel list", Desc: "List all channels"},
 	}
 )
 
