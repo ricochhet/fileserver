@@ -1,4 +1,4 @@
-package main
+package commands
 
 import (
 	"flag"
@@ -6,7 +6,7 @@ import (
 	"github.com/ricochhet/fileserver/pkg/cmdutil"
 )
 
-type Flags struct {
+type FlagSet struct {
 	Debug     bool
 	QuickEdit bool
 
@@ -19,8 +19,8 @@ type Flags struct {
 }
 
 var (
-	flags = NewFlags()
-	cmds  = cmdutil.Commands{
+	Flags = NewFlags()
+	Cmds  = cmdutil.Commands{
 		{Usage: "fileserver help", Desc: "Show this help"},
 		{Usage: "fileserver list [PATH]", Desc: "List embedded files"},
 		{Usage: "fileserver dump [PATH]", Desc: "Dump embedded files to disk"},
@@ -41,18 +41,18 @@ var (
 )
 
 // NewFlags creates an empty Flags.
-func NewFlags() *Flags {
-	return &Flags{}
+func NewFlags() *FlagSet {
+	return &FlagSet{}
 }
 
 //nolint:gochecknoinits // wontfix
 func init() {
-	registerFlags(flag.CommandLine, flags)
+	registerFlags(flag.CommandLine, Flags)
 	flag.Parse()
 }
 
 // registerFlags registers all flags to the flagset.
-func registerFlags(fs *flag.FlagSet, f *Flags) {
+func registerFlags(fs *flag.FlagSet, f *FlagSet) {
 	fs.BoolVar(&f.Debug, "debug", false, "Enable debug mode")
 	fs.BoolVar(&f.QuickEdit, "quick-edit", false, "Enable quick edit mode (Windows)")
 	fs.StringVar(&f.ConfigFile, "c", "fileserver.json", "Path to file server configuration")

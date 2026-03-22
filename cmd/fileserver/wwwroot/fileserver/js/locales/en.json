@@ -105,5 +105,5 @@
 	"admin_upload_clear": "clear",
 	"admin_upload_ok": "{n} file(s) uploaded successfully.",
 	"admin_err_no_files": "please select at least one file.",
-	"admin_err_upload_network": "network error — upload failed."
+	"admin_err_upload_network": "network error: upload failed."
 }

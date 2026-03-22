@@ -249,7 +249,7 @@ func (c *Context) seedUsersFromConfig(users []configutil.FormAuthUser) {
 }
 
 // renderChatTemplate executes chat.html as a Go template, injecting the chat route.
-// text/template is used intentionally — html/template applies context-aware JS escaping.
+// text/template is used intentionally - html/template applies context-aware JS escaping.
 func renderChatTemplate(src []byte, chatRoute string) ([]byte, error) {
 	tmpl, err := template.New(chatTmpl).Parse(string(src))
 	if err != nil {

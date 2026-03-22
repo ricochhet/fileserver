@@ -18,7 +18,7 @@
 	--slv-border-ui: #2a2a2a;
 	--slv-border-code: #2f2f2f;
 
-	/* Accent — blue */
+	/* Accent - blue */
 	--slv-accent: #257afb;
 	--slv-accent-dark: hsl(216deg 100% 40%);
 	--slv-accent-bg: rgba(37, 122, 251, 0.12);
@@ -184,7 +184,7 @@ li:not(:last-child) {
 	padding: var(--slv-sleeve-padding);
 }
 
-/* Shared modal/panel backdrop — add this class alongside any specific ID */
+/* Shared modal/panel backdrop - add this class alongside any specific ID */
 .slv-overlay-backdrop {
 	position: absolute;
 	inset: 0;
