@@ -78,7 +78,11 @@ func ServerCmd(s interface{ StartServer() error }) error {
 
 // extractPositional splits args into (positional, flagArgs) by pulling out the
 // first token that does not start with "-".
-func extractPositional(args []string) (positional string, flagArgs []string) {
+func extractPositional(args []string) (string, []string) {
+	var positional string
+
+	flagArgs := []string{}
+
 	for _, a := range args {
 		if !strings.HasPrefix(a, "-") && positional == "" {
 			positional = a

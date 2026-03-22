@@ -142,7 +142,7 @@ func (c *Context) bootServer(baseCtx context.Context, cfg configutil.Server) err
 	})
 
 	if len(cfg.FormAuth.Users) > 0 {
-		c.mountFormAuth(r, ctx, cfg)
+		c.mountFormAuth(baseCtx, r, ctx, cfg)
 	} else if cfg.BasicAuth.Username != "" && cfg.BasicAuth.Password != "" {
 		r.Use(withBasicAuth(cfg.BasicAuth.Username, cfg.BasicAuth.Password))
 		logutil.Infof(
@@ -160,15 +160,20 @@ func (c *Context) bootServer(baseCtx context.Context, cfg configutil.Server) err
 
 // mountFormAuth enables form auth middleware, seeds users, registers auth
 // routes, and mounts the admin handler. Only when form auth is configured.
-func (c *Context) mountFormAuth(r *chi.Mux, ctx *serverutil.Context, cfg configutil.Server) {
+func (c *Context) mountFormAuth(
+	ctx context.Context,
+	r *chi.Mux,
+	srvCtx *serverutil.Context,
+	cfg configutil.Server,
+) {
 	secret := auth.ResolveFormAuthSecret(cfg.FormAuth.Secret)
 
 	if c.db != nil {
-		c.seedUsersFromConfig(cfg.FormAuth.Users)
+		c.seedUsersFromConfig(ctx, cfg.FormAuth.Users)
 	}
 
 	r.Use(auth.WithFormAuth(cfg.FormAuth.Users, secret, cfg.FormAuth.PublicPrefixes, c.db))
-	auth.RegisterAuthRoutes(ctx.Handle, cfg.FormAuth.Users, secret, c.db, c.FS)
+	auth.RegisterAuthRoutes(srvCtx.Handle, cfg.FormAuth.Users, secret, c.db, c.FS)
 
 	adminResolver := func(req *http.Request) (string, bool) {
 		return auth.UsernameFromCtx(req), auth.IsAdminFromCtx(req)
@@ -229,7 +234,7 @@ func (c *Context) maybeChat(r *chi.Mux, cfg configutil.Server) {
 
 // seedUsersFromConfig inserts config-defined form-auth users into the database
 // on first boot only. Existing rows are left untouched.
-func (c *Context) seedUsersFromConfig(users []configutil.FormAuthUser) {
+func (c *Context) seedUsersFromConfig(ctx context.Context, users []configutil.FormAuthUser) {
 	for _, u := range users {
 		dn := u.DisplayName
 		if dn == "" {
@@ -237,7 +242,7 @@ func (c *Context) seedUsersFromConfig(users []configutil.FormAuthUser) {
 		}
 
 		if err := c.db.InsertUserIfNotExists(
-			context.Background(),
+			ctx,
 			u.Username,
 			u.Password,
 			dn,
