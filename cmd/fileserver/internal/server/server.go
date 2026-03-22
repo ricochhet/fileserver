@@ -3,11 +3,11 @@ package server
 import (
 	"bytes"
 	"context"
+	"html/template"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
-	"text/template"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -254,7 +254,6 @@ func (c *Context) seedUsersFromConfig(ctx context.Context, users []configutil.Fo
 }
 
 // renderChatTemplate executes chat.html as a Go template, injecting the chat route.
-// text/template is used intentionally - html/template applies context-aware JS escaping.
 func renderChatTemplate(src []byte, chatRoute string) ([]byte, error) {
 	tmpl, err := template.New(chatTmpl).Parse(string(src))
 	if err != nil {
