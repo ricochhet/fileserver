@@ -16,7 +16,7 @@ require (
 	github.com/tidwall/jsonc v0.3.3
 	go.yaml.in/yaml/v4 v4.0.0-rc.4
 	golang.org/x/term v0.41.0
-	modernc.org/sqlite v1.47.0
+	modernc.org/sqlite v1.48.0
 )
 
 require (
